@@ -1,0 +1,230 @@
+{
+  "name": "workflow-2-telegram-bot.json",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "7c0ecc9f-8466-495b-ab43-b417d1edd693",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -352,
+        -32
+      ],
+      "webhookId": "1f7a015b-8f38-463a-8774-56ab77c9d7e0",
+      "credentials": {
+        "telegramApi": {
+          "id": "LBU6UmCLIBlZ8spI",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are a helpful assistant that answers questions about the uploaded documents. ALWAYS use the knowledge base tool before answering. Answer only from what the tool returns. If the answer is not there, say “I don’t have that information.” Keep answers short and friendly."
+        }
+      },
+      "id": "be015f39-3458-4714-b76d-a64e29b6ff10",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -96,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "id": "29f8fbae-961e-45e6-a0b2-931706f9fb9e",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -96,
+        176
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "g4bodh0MPhlSrcdM",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+      },
+      "id": "9c3836b1-a352-4bb0-8b6d-79cf41f50130",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Use this to look up information from the uploaded documents.",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "rag-bot",
+          "mode": "list",
+          "cachedResultName": "rag-bot"
+        },
+        "options": {}
+      },
+      "id": "0c1c8493-37fe-4030-a5db-c93a516b6086",
+      "name": "Pinecone Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        304,
+        -16
+      ],
+      "credentials": {
+        "pineconeApi": {
+          "id": "jsQCh3PoLLLmpDIZ",
+          "name": "Pinecone account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "28c5ee14-ab4f-4f31-a849-bc9aff9ecb1e",
+      "name": "Embeddings Google Gemini",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        304,
+        160
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "g4bodh0MPhlSrcdM",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output.replace(/&/g, \"&amp;\").replace(/</g, \"&lt;\").replace(/>/g, \"&gt;\").replace(/**(.+?)**/g, \"<b>$1</b>\").replace(/^s*[*-]s+/gm, \"• \") }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "cbbe0a84-8752-4868-8193-2b18c6070d26",
+      "name": "Send a text message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        496,
+        128
+      ],
+      "webhookId": "fbcfce64-0083-4f9e-9442-1508af7e0af0",
+      "credentials": {
+        "telegramApi": {
+          "id": "LBU6UmCLIBlZ8spI",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0e1be897-504e-49f3-9fbf-b83ca64dd0d9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d1417a05ec7981eb2acb35d185260173089efab677e4706a926b06a7b59433e8"
+  },
+  "nodeGroups": [],
+  "id": "JY2hcXCbYNjw7lx6",
+  "tags": []
+}

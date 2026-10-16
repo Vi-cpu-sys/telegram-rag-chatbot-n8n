@@ -1,0 +1,162 @@
+{
+  "name": "RAG - Upload",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Upload document",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "data",
+              "fieldType": "file",
+              "acceptFileTypes": ".pdf",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -320,
+        48
+      ],
+      "id": "93fd5cc7-f80b-43df-9b62-1fde8b67f014",
+      "name": "On form submission",
+      "webhookId": "f373f3ca-46c0-4ddf-b15f-7e7c80f64515"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "rag-bot",
+          "mode": "list",
+          "cachedResultName": "rag-bot"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        -48,
+        -32
+      ],
+      "id": "c4c35eee-2cf0-4039-86f8-28ada0b57ecc",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "jsQCh3PoLLLmpDIZ",
+          "name": "Pinecone account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        160
+      ],
+      "id": "a26a8d28-b0f1-40ce-b83a-2047423b563f",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "g4bodh0MPhlSrcdM",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        112,
+        112
+      ],
+      "id": "907db09e-1f35-4808-893f-c951f17a8b62",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 200,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        112,
+        272
+      ],
+      "id": "22f01e92-0b45-4729-abe2-5021cbdc9b9d",
+      "name": "Recursive Character Text Splitter"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "750f0e19-7d55-41be-94de-87f5b41cd618",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d1417a05ec7981eb2acb35d185260173089efab677e4706a926b06a7b59433e8"
+  },
+  "nodeGroups": [],
+  "id": "M8GVUQget9Yuugik",
+  "tags": []
+}
