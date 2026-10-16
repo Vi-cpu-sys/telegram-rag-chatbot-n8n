@@ -28,9 +28,6 @@ A Telegram message triggers an AI Agent. The agent searches Pinecone for the 4 m
 ## Tech stack
 n8n, Google Gemini (chat + embeddings), Pinecone, Telegram Bot API
 
-## Screenshots
-[drag your screenshots here while editing]
-
 ## How to run it yourself
 1. Create accounts: n8n, Google AI Studio, Pinecone, Telegram (@BotFather)
 2. Create a Pinecone index: dimension 3072, cosine
